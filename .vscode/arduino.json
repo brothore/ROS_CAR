@@ -1,0 +1,6 @@
+{
+    "port": "COM9",
+    "configuration": "cpu=atmega2560",
+    "board": "arduino:avr:mega",
+    "sketch": "ROS_CAR_MOTOR\\ROS_CAR_MOTOR.ino"
+}

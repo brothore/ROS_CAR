@@ -1,34 +1,6 @@
-/*
-  v1移植代码
-  v2正常循迹
-  v4直角转弯
-  v5修改了刹车
-  v7完美转弯90%
-*/
+
 #include <SoftwareSerial.h>
 #include <Servo.h>
-
-
-#define R1A 23
-#define R1B 24
-#define R1S 13
-#define L1S 25
-#define L1A 26
-#define L1B 12
-
-#define R2A 35
-#define R2B 36
-#define R2S 9
-#define L2S 6
-#define L2A 38
-#define L2B 39
-
-#define R3A 28
-#define R3B 29
-#define R3S 8
-#define L3S 7
-#define L3A 30
-#define L3B 31
 
 #define PI 3.14159265
 #define MotorL1countA 21 //编码器A
@@ -49,6 +21,26 @@
 
 #define MotorR3countA 3 //编码器A
 #define MotorR3countB 33 //编码器B
+
+const int  R3A =23;
+const int  R3B =24;
+const int  R3S =13;
+const int  L3S =12;
+const int  L3A =25;
+const int  L3B =26;
+const int  L2A =36;
+const int  L2B =35;
+const int  L2S =9;
+const int  L1S =6;
+const int  L1A =39;
+const int  L1B =38;
+const int  R1A =28;
+const int  R1B =29;
+const int  R1S =8;
+const int  R2S =7;
+const int  R2A =31;
+const int  R2B =30;
+
 unsigned long lastTime,lastTime2;
 int SampleTime = 10;
 unsigned long right_cd = 0;
@@ -148,6 +140,11 @@ int receive_data = 8;
   /**
      函数作用：读取左右电机的速度
      返回值：  无
+     
+    r3------l3
+    l2------l1
+    r2------r1
+
    * */
 void Read_Moto_V() {
 
@@ -188,27 +185,22 @@ V_L1=V_R1=V_L2=V_R2=V_L3=V_R3 = 0;
   v4 = V_R2;
   v5 = V_L3;
   v6 = V_R3;
-//   Serial.print("L1:");
-//   Serial.print(v1);
+  Serial.print("L1:");
+  Serial.print(v1);
   Serial.print("\tL2:");
   Serial.print(v3);
   Serial.print("\tL3:");
   Serial.println(v5);
 
-//   Serial.print("R1:");
-//   Serial.print(v2);
-//   Serial.print("\tR2:");
-//   Serial.print(v4);
-//   Serial.print("\tR3:");
-//   Serial.println(v6);
-//   Serial.println();
+  Serial.print("R1:");
+  Serial.print(v2);
+  Serial.print("\tR2:");
+  Serial.print(v4);
+  Serial.print("\tR3:");
+  Serial.println(v6);
+  Serial.println();
 // 变压器一边为车头
-/*
-r3------l3
-l2------l1
-r2------r1
 
-*/
 }
 
 void Read_Moto_L1() {
@@ -315,11 +307,57 @@ void Read_Moto_R2() {
   //  Serial.println(motorR);
 }
 
-void Run_Moto_F(int L_v, int R_v) {
   /**
      函数作用：电机行走，传入的L_v R_v为左右轮速度，范围-255~255，对应倒转和正转
      返回值：  无
+      L      R
+      1------1
+      2------2
+      3------3
+
    * */
+void Run_Moto_F(int L_v, int R_v, int L_Moto,int R_Moto) {
+  int L_Motor_A,R_Motor_A,L_Motor_B,R_Motor_B,L_Motor_SPEED,R_Motor_SPEED;
+  switch (L_Moto)
+  {
+  case 1:
+    L_Motor_A = L1A;
+    L_Motor_B = L1B;
+    L_Motor_SPEED = L1S;
+    break;
+  case 2:
+    L_Motor_A = L2A;
+    L_Motor_B = L2B;
+    L_Motor_SPEED = L2S;
+    break;
+  case 3:
+    L_Motor_A = L3A;
+    L_Motor_B = L3B;
+    L_Motor_SPEED = L3S;
+    break;
+  default:
+    break;
+  }
+switch (R_Moto)
+{
+  case 1:
+    R_Motor_A = R1A;
+    R_Motor_B = R1B;
+    R_Motor_SPEED = R1S;
+    break;
+  case 2:
+    R_Motor_A = R2A;
+    R_Motor_B = R2B;
+    R_Motor_SPEED = R2S;
+    break;
+  case 3:
+    R_Motor_A = R3A;
+    R_Motor_B = R3B;
+    R_Motor_SPEED = R3S;
+    break;
+  default:
+    break;
+  }
   if (L_v > 250)
   {
     L_v = 250;
@@ -336,50 +374,36 @@ void Run_Moto_F(int L_v, int R_v) {
   {
     R_v = -250;
   }
-
-
   //前进，可设置左右轮速度
   if (L_v > 0) {
-    digitalWrite(L1A, 0);
-    digitalWrite(L1B, HIGH);
-    analogWrite(L1S, L_v);
-
-
+    digitalWrite(L_Motor_A, 0);
+    digitalWrite(L_Motor_B, HIGH);
+    analogWrite(L_Motor_SPEED, L_v);
   } else if (L_v < 0) {
-
-    digitalWrite(L1A, HIGH);
-    digitalWrite(L1B, 0);
-    analogWrite(L1S, -L_v);
-
+    digitalWrite(L_Motor_A, HIGH);
+    digitalWrite(L_Motor_B, 0);
+    analogWrite(L_Motor_SPEED, -L_v);
   } else
   {
-    digitalWrite(L1A, 0);
-    digitalWrite(L1B, 0);
-    analogWrite(L1S, 0);
-
+    digitalWrite(L_Motor_A, 0);
+    digitalWrite(L_Motor_B, 0);
+    analogWrite(L_Motor_SPEED, 0);
   }
-
   if (R_v > 0) {
-    digitalWrite(R1A, HIGH);
-    digitalWrite(R1B, 0);
-    analogWrite(R1S, R_v);
-
-
+    digitalWrite(R_Motor_A, HIGH);
+    digitalWrite(R_Motor_B, 0);
+    analogWrite(R_Motor_SPEED, R_v);
   } else if (R_v < 0) {
-    digitalWrite(R1A, 0);
-    digitalWrite(R1B, HIGH);
-    analogWrite(R1S, -R_v);
-
+    digitalWrite(R_Motor_A, 0);
+    digitalWrite(R_Motor_B, HIGH);
+    analogWrite(R_Motor_SPEED, -R_v);
   } else
   {
-    digitalWrite(R1A, 0);
-    digitalWrite(R1B, 0);
-    analogWrite(R1S, 0);
+    digitalWrite(R_Motor_A, 0);
+    digitalWrite(R_Motor_B, 0);
+    analogWrite(R_Motor_SPEED, 0);
     // delay(2000);
   }
-
-
-
 }
 
 int Position_Servo (float Encoder, float Target) { //小车转向pid，输入为转向角度，以及目标度数，返回的是目标速度的叠加
@@ -534,7 +558,7 @@ void Rec_SPID() {
     command = "";
     MID_flag = 1;
     if (kp != P_out || ki != I_out || kd != D_out) {
-      Run_Moto_F(0, 0);
+
       kp = P_out;
       ki = I_out;
       kd = D_out;
@@ -623,7 +647,12 @@ int Incremental_Pi_R(int current_speed, int target_speed) {
 }
 
 
-
+                                                                           
 void loop() { 
 Read_Moto_V();
+// Run_Moto_F(100,0,L1A,R1A,L1B,R1B,L1S,R1S);
+//  Run_Moto_F(100,0,L2A,R2A,L2B,R2B,L2S,R2S);
+Run_Moto_F(100,100,1,2);
+delay(1000);
+Run_Moto_F(250,-100,2,1);
 }
